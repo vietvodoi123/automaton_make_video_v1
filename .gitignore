@@ -1,0 +1,21 @@
+# Bỏ qua tất cả file trong thư mục .venv (do virtualenv tạo ra)
+.venv/
+env/
+venv/
+
+# Bỏ qua tất cả thư mục node_modules ở bất kỳ đâu
+**/node_modules/
+
+# Bỏ qua thư mục .idea của JetBrains IDE
+.idea/
+
+# Bỏ một số file tạm khác (tùy chọn)
+__pycache__/
+*.pyc
+*.pyo
+*.log
+.DS_Store
+
+**/credentials.json
+**/token.json
+**/client_secret.json

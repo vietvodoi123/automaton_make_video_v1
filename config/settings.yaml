@@ -1,0 +1,14 @@
+google:
+  sheets_id: "105AdB7LzYPDkYrIPwPyAL0zroPwedv2iFgnqHmnNtRg"
+  docs_folder_id: "14hRg0XnY9NfaX6EIiKBtTdf60L9a7V-8"
+  credentials_path: "config/credentials.json"
+
+task_limits:
+  fetch: 5
+  translate: 3
+  audio: 2
+  upload: 2
+
+
+GOOGLE_DRIVE_FOLDER_ID: "14hRg0XnY9NfaX6EIiKBtTdf60L9a7V-8"
+
