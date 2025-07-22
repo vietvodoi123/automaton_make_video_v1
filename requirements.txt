@@ -17,3 +17,4 @@ moviepy
 gdown
 Pillow
 openai
+tqdm

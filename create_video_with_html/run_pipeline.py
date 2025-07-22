@@ -10,15 +10,27 @@ def save_text_to_file(text, path="data.txt"):
         f.write(text.strip())
     print(f"📄 Đã lưu văn bản vào {path}")
 
-def render_frames(frames_path,data_file="data.txt"):
+import subprocess
+import os
+import sys
+
+def render_frames(frames_path, data_file="data.txt"):
     if not os.path.isfile(data_file):
         raise FileNotFoundError(f"❌ File không tồn tại: {data_file}")
 
     print(f"📸 Đang render các frame từ {data_file}...")
-    js_path = os.path.abspath(os.path.join("create_video_with_html", "render_frames.js"))
 
+    js_path = os.path.abspath(os.path.join("create_video_with_html", "render_frames_parallel.js"))
     data_file = os.path.abspath(data_file)
-    subprocess.run(["node", js_path, data_file, frames_path], check=True)
+    frames_path = os.path.abspath(frames_path)
+
+    subprocess.run(
+        ["node", js_path, data_file, frames_path],
+        check=True,
+        stdout=sys.stdout,  # Cho phép in ra màn hình
+        stderr=sys.stderr
+    )
+
     print("✅ Đã render xong frames")
 
 def generate_concat(task_id,tmp_dir ,frames_path,output_path,data_file='data.txt'):
