@@ -79,11 +79,12 @@ def dispatch_tasks(spreadsheet_id: str):
                     "summary": ""
                 }
                 tasks.append(task)
-            # B3: Ghi các task vào sheet
-            task_sheet.append_tasks(tasks)
-
-            # B4: Cập nhật trạng thái truyện
-            story_sheet.update_story_status(story_id, "DISPATCHED")
+            print(tasks)
+            # # B3: Ghi các task vào sheet
+            # task_sheet.append_tasks(tasks)
+            #
+            # # B4: Cập nhật trạng thái truyện
+            # story_sheet.update_story_status(story_id, "DISPATCHED")
 
             print(f"✅ Đã chia {len(tasks)} task cho truyện {story_id}")
 
