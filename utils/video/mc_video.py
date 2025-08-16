@@ -67,7 +67,7 @@ def create_looped_mc_video_from_url(video_url, output_path, duration):
         loop_count = int(duration // input_duration) + 1
 
         # Resize (scale) thành 263px chiều ngang, crop chiều cao còn 306
-        vf_filter = "fps=8,scale=265:-1,crop=265:300:0:0"
+        vf_filter = "fps=8,scale=265:300:force_original_aspect_ratio=increase,crop=265:300"
 
         # Tạo video loop + crop
         cmd = [

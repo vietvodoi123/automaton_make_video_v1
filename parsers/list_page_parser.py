@@ -9,15 +9,15 @@ def parse_chapter_list_from_list_page(url_list_page: str, base_url: str = None) 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
     }
-    resp = requests.get(url_list_page, headers=headers, timeout=10)
+    resp = requests.get(url_list_page, headers=headers, timeout=60)
     resp.raise_for_status()
 
     soup = BeautifulSoup(resp.text, "html.parser")
-    ul = soup.find_all("ul", class_="section-list fix")
+    ul = soup.find(id="content_1")
     if not ul:
         raise Exception("Không tìm thấy ul.section-list.fix")
 
-    chapter_links = ul[1].find_all("a", href=True)
+    chapter_links = ul.find_all("a", href=True)
     chapters = []
     for a in chapter_links:
         title = a.get_text(strip=True)

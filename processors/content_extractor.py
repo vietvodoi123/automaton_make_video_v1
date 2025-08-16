@@ -20,11 +20,11 @@ def extract_chapter_content_bs4(url: str, css_title: str, css_content: str, css_
     # full_summarized = ""
 
     parsed_origin = urlparse(url)
-    origin_chapter_id = parsed_origin.path.strip("/").split("/")[1].split("_")[0].split(".")[0]  # ID chương
+    origin_chapter_id = parsed_origin.path.strip("/").split("/")[-1].split("_")[0].split(".")[0]  # ID chương
 
     while current_url not in visited_urls:
         visited_urls.add(current_url)
-        time.sleep(1.5)
+        time.sleep(5)
 
         response = requests.get(current_url, headers=headers)
         if response.status_code != 200:
@@ -41,7 +41,7 @@ def extract_chapter_content_bs4(url: str, css_title: str, css_content: str, css_
         content_elem = soup.select_one(css_content)
         if not content_elem:
             raise ValueError(f"Không tìm thấy nội dung với selector: {css_content}")
-        raw_cn_content = content_elem.get_text(separator="\n").strip().replace("请收藏本站：.nibq。笔趣阁手机版：.nibq","").replace("本章未完，点击下一页继续阅读","")
+        raw_cn_content = content_elem.get_text(separator="\n").strip().replace("请收藏本站：.nibq。笔趣阁手机版：.nibq","").replace("本章未完，点击下一页继续阅读","").replace("请收藏本站：.biq01。笔趣阁手机版：.biq01","")
 
         # dich truyen
         res = translate_full_text(raw_cn_content)
@@ -53,11 +53,12 @@ def extract_chapter_content_bs4(url: str, css_title: str, css_content: str, css_
         next_btn = soup.select_one(css_next) if css_next else None
         next_href = next_btn.get("href") if next_btn else None
         print("➡️ next_href:", next_href)
-
+        print(f"origin {origin_chapter_id}")
         if next_href:
             next_url = urljoin(current_url, next_href)
             next_path = urlparse(next_url).path.strip("/")
-            next_chapter_id = next_path.split("/")[1].split("_")[0].split(".")[0]
+            next_chapter_id = next_path.split("/")[-1].split("_")[0].split(".")[0]
+            print(f"next chapter {next_chapter_id}")
 
             if next_chapter_id != origin_chapter_id:
                 print("⛔ Đã sang chương khác, dừng lại.")
@@ -67,7 +68,7 @@ def extract_chapter_content_bs4(url: str, css_title: str, css_content: str, css_
         else:
             break
 
-    title_trans=translate_full_text(title)
+    title_trans=translate_full_text(title).split('_')[0]
     summary = summarized_by_gpt(full_translated)
     return {
         "title": title,
@@ -80,19 +81,9 @@ def extract_chapter_content_bs4(url: str, css_title: str, css_content: str, css_
 
 if __name__ == "__main__":
     a = extract_chapter_content_bs4(
-        "https://www.99bqg.com/373939/129033594.html",
-        "h1",
-        "div#content",
-        "a#next_url"
+        "https://www.xm200.com/book/371789/128363226.html",
+        "title",
+        "div#booktxt",
+        'a[rel="next"]'
     )
-    print(a['title'])
-    with open("text_raw.txt", "w", encoding="utf-8") as f:
-        f.write(a['raw_cn_content'])
-
-    with open("text_translate.txt", "w", encoding="utf-8") as f:
-        f.write(a['translation'])
-
-    print(a['summarized'])
     print(a)
-    # x=translate_and_summarize_chinese_to_vietnamese(a['raw_cn_content'])
-    # print(x)

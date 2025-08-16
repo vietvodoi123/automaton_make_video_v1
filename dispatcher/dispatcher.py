@@ -6,9 +6,10 @@ from parsers.list_page_parser import parse_chapter_list_from_list_page
 from parsers.single_page_parser import parse_chapter_list_from_single_page
 from sheets.story_sheet import StorySheet
 from sheets.task_sheet import TaskSheet
+from utils import load_yaml_settings
 
-
-def dispatch_tasks(spreadsheet_id: str):
+def dispatch_tasks():
+    spreadsheet_id = load_yaml_settings()['google']['sheets_id']
     # Khởi tạo sheet
     story_sheet = StorySheet(spreadsheet_id)
     task_sheet = TaskSheet(spreadsheet_id)

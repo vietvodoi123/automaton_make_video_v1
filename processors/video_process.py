@@ -12,27 +12,59 @@ from utils.run_ffmpeg_with_progress import run_ffmpeg_with_progress
 
 def merge_audio_into_video(video_path, audio_path, output_path):
     """
-    Ghép audio vào video:
-    - Không tái mã hóa video (dùng copy stream)
-    - Chỉ cắt theo độ dài ngắn hơn giữa video và audio (dùng -shortest)
+    Ghép audio vào video, ưu tiên theo độ dài audio:
+    - Nếu video ngắn hơn audio → lặp lại video
+    - Nếu video dài hơn audio → cắt video
     """
+    import subprocess
 
+    # Lấy độ dài audio
+    def get_duration(path):
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                path
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        return float(result.stdout.strip())
+
+    audio_duration = get_duration(audio_path)
+
+    # Tạo video tạm đủ dài theo audio (lặp hoặc cắt)
+    temp_video = output_path + "_temp.mp4"
+    ffmpeg_cmd = [
+        "ffmpeg", "-y",
+        "-stream_loop", "-1",
+        "-i", video_path,
+        "-t", str(audio_duration),
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        temp_video
+    ]
+    run_ffmpeg_with_progress(ffmpeg_cmd, input_file=video_path)
+
+    # Ghép audio vào video tạm
     cmd = [
         "ffmpeg",
         "-y",
-        "-loglevel", "info",
-        "-i", video_path,
+        "-i", temp_video,
         "-i", audio_path,
-        "-c:v", "copy",           # Không encode lại video
-        "-c:a", "aac",            # Mã hóa audio về AAC
-        "-b:a", "192k",           # Bitrate audio
-        "-shortest",              # Dừng khi hết video hoặc audio
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-b:a", "192k",
+        "-t", str(audio_duration),  # Đảm bảo cắt đúng độ dài audio
         output_path
     ]
 
-    print("🎧 Đang ghép audio vào video...")
-    run_ffmpeg_with_progress(cmd, input_file=video_path)
+    print("🎧 Đang ghép audio vào video (theo độ dài audio)...")
+    run_ffmpeg_with_progress(cmd, input_file=temp_video)
     print(f"✅ Đã xuất video kèm âm thanh: {output_path}")
+
 
 def create_template_video(story_row,task_row,channel_row,template_path):
     task_id = task_row.get('task_id')

@@ -7,9 +7,10 @@ from sheets import ChannelSheet, StorySheet, TaskSheet
 from utils.audio.add_intro_and_comments import add_intro_and_comments
 from google_docs_oauth.get import get_doc_content_from_url
 from utils import load_yaml_settings
-async def call_audio_with_retry(text, max_retries=3, delay_sec=2):
+async def call_audio_with_retry(text, max_retries=3, delay_sec=100):
+    original_text = str(text)  # copy để đảm bảo không bị tham chiếu lại
     async def wrapper():
-        audio_url = await call_audio_api(text)
+        audio_url = await call_audio_api(original_text)
         if not audio_url:
             raise ValueError("API trả về URL rỗng.")
         return audio_url
@@ -60,7 +61,7 @@ async def audio_process(task_id: str):
             return []
     else:
         try:
-            # Dự đoán task trước đó theo định dạng `_partN`
+            # Dự đoán task trước đó theo định dạng _partN
             if "_part" in task_id:
                 prefix, part = task_id.rsplit("_part", 1)
                 previous_task_id = f"{prefix}_part{int(part) - 1}"
@@ -104,14 +105,16 @@ async def audio_process(task_id: str):
     # print("đã lưu file")
 
     chunks = split_text(full_text)
-    semaphore = asyncio.Semaphore(15)
+    semaphore = asyncio.Semaphore(10)
 
-    async def call_with_limit(chunk):
+    async def call_with_limit(idx, chunk):
         async with semaphore:
-            return await call_audio_with_retry(chunk)
+            return idx, await call_audio_with_retry(chunk)
 
-    tasks = [call_with_limit(chunk) for chunk in chunks]
+    tasks = [call_with_limit(i, chunk) for i, chunk in enumerate(chunks)]
     results = await asyncio.gather(*tasks)
+    # Sắp xếp lại đúng thứ tự
+    results_sorted = [url for _, url in sorted(results, key=lambda x: x[0])]
 
     # caapj nhaatj task sheet
     try:
@@ -119,7 +122,7 @@ async def audio_process(task_id: str):
             task_id,
             "AUDIO_DONE",
             extra_updates={
-                "audio_urls": results,
+                "audio_urls": results_sorted,
             }
         )
         print(f"{task_id} ✅ Hoàn tất toàn Audio.")
