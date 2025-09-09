@@ -18,3 +18,4 @@ gdown
 Pillow
 openai
 tqdm
+cryptography

@@ -6,7 +6,7 @@ from processors import extract_chapter_content_bs4, translate_full_text
 from utils import refine_translation, summarize_text, recursive_summary, load_yaml_settings
 from google_docs_oauth import save_translated_task
 from sheets import TaskSheet,StorySheet
-from utils import retry_with_limit,translate_and_summarize_chinese_to_vietnamese
+from utils import retry_with_limit,normalize_whitespace,collapse_blank_lines,remove_consecutive_duplicate_lines,clean_chapter_text
 
 def text_process(task_id: str):
     config = load_yaml_settings()
@@ -35,15 +35,21 @@ def text_process(task_id: str):
         try:
             print(f"{log_prefix} 📖 Chương {index + 1}: Đang trích xuất nội dung...")
             print(f"css_next debug: {css_next!r}")
-            result = retry_with_limit(3, 30, extract_chapter_content_bs4, url, css_title, css_content, css_next)
-            title = result["title"]
-            title_translated = result["title_translated"]
-            raw_cn_content = result["raw_cn_content"]
+            result = retry_with_limit(3, 60, extract_chapter_content_bs4, url, css_title, css_content, css_next)
             translation = result["translation"]
             summarized = result["summarized"]
-            print(summarized)
 
-            full_translated_chapters += translation + "\n"
+            def final_cleanup_all(text: str) -> str:
+                text = normalize_whitespace(text)
+                text = remove_consecutive_duplicate_lines(text)
+                text = collapse_blank_lines(text, max_blank=2)
+                # đảm bảo không có space thừa ở đầu/ cuối
+                return text.strip()
+
+            # trước khi save_translated_task(...)
+            full_translated_chapters +="\n" + translation
+            full_translated_chapters = final_cleanup_all(full_translated_chapters)
+            print(index,full_translated_chapters.__len__())
             full_summrized += summarized + "\n"
 
         except Exception as e:
@@ -52,6 +58,7 @@ def text_process(task_id: str):
             return
 
     #  lưu vào driver
+    print(full_translated_chapters.__len__())
     try:
         doc_url = retry_with_limit(
             max_retries=3,

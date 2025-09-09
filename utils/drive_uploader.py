@@ -3,11 +3,16 @@ import pickle
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, MediaFileUpload
+from utils import retry_with_limit
 
 # Khai báo scope để dùng Google Drive
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 CLIENT_SECRET_FILE = "google_docs_oauth/client_secret.json"
 TOKEN_FILE = "google_docs_oauth/token.json"
+
+from googleapiclient.discovery import build
+from googleapiclient.http import build_http
+import httplib2
 
 def get_drive_service():
     creds = None
@@ -24,7 +29,11 @@ def get_drive_service():
         with open(TOKEN_FILE, "wb") as token:
             pickle.dump(creds, token)
 
-    return build("drive", "v3", credentials=creds)
+    # Truyền thẳng credentials, không cần authorize()
+    service = build("drive", "v3", credentials=creds, cache_discovery=False)
+
+    return service
+
 
 def get_or_create_subfolder(parent_folder_id: str, subfolder_name: str, drive_service) -> str:
     """
@@ -68,7 +77,14 @@ def upload_to_drive(file_path: str, folder_id: str, story_title: str) -> str:
     }
     media = MediaFileUpload(file_path, resumable=True, mimetype='video/mp4')
 
-    file = drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    file = retry_with_limit(
+        max_retries=5,
+        delay_sec=10,
+        func=lambda: drive_service.files().create(
+            body=file_metadata, media_body=media, fields='id'
+        ).execute()
+    )
+
     file_id = file.get("id")
 
     # Set quyền chia sẻ công khai

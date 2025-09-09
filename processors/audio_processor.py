@@ -69,9 +69,9 @@ async def audio_process(task_id: str):
                 previous_task_id = task_id[:-1] + str(int(task_id[-1]) - 1)
             previous_task_row = task_sheet.get_task_by_id(previous_task_id)
             intro2 = previous_task_row.get("summary", "")
-            if not intro2:
-                print(f"Task có id {previous_task_id} không có tóm tắt")
-                return []
+            # if not intro2:
+            #     print(f"Task có id {previous_task_id} không có tóm tắt")
+            #     return []
         except Exception as e:
             print(f"Không tìm thấy task trước đó cho {task_id}: {e}")
             return []

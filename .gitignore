@@ -2,6 +2,8 @@
 .venv/
 env/
 venv/
+.tmp/
+tmp/
 
 # Bỏ qua tất cả thư mục node_modules ở bất kỳ đâu
 **/node_modules/

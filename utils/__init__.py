@@ -11,12 +11,16 @@ from .video.mc_video import create_looped_mc_video_from_url
 
 from .drive_uploader import upload_to_drive
 
-from .openai_translate_summary.translate_and_sumary_cn_vn import translate_and_summarize_chinese_to_vietnamese,summarized_by_gpt
+from .openai_translate_summary.translate_and_sumary_cn_vn import translate_and_summarize_chinese_to_vietnamese,summarized_by_gpt,chinh_sua_ban_dich
 
 from.run_ffmpeg_with_progress import run_ffmpeg_with_progress,get_video_duration
 from .file import TMP_DIR
 
 from .audio.download_and_concat_mp3 import download_and_concat_mp3
 from .audio.audio_fnc import get_audio_duration
+from .audio.crypto_utils import encrypt_payload,decrypt_params
+from  .audio.tts_client import call_tts_api
 
 from .text.estimate_seconds_per_word import estimate_seconds_per_word
+
+from .text.chapter_utils import normalize_whitespace,collapse_blank_lines,remove_consecutive_duplicate_lines,clean_chapter_text

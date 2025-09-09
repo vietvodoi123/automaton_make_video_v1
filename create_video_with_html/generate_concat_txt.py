@@ -1,21 +1,30 @@
 import os
 import subprocess
 import json
+import os
+import subprocess
+import json
+
 def get_audio_duration(mp3_path):
-    """
-    Lấy độ dài file mp3 bằng ffprobe (không cần audioop hay pydub).
-    """
+    if not os.path.exists(mp3_path) or os.path.getsize(mp3_path) < 1000:
+        raise ValueError(f"⚠️ File audio không hợp lệ: {mp3_path}")
+
     cmd = [
-        "ffprobe",
-        "-v", "error",
+        "ffprobe", "-v", "error",
         "-show_entries", "format=duration",
         "-of", "json",
         mp3_path
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
-    info = json.loads(result.stdout)
-    duration = float(info["format"]["duration"])
-    return duration
+
+    try:
+        info = json.loads(result.stdout)
+        duration = float(info["format"]["duration"])
+        return duration
+    except Exception:
+        raise ValueError(f"⚠️ Không đọc được duration từ {mp3_path}. Nội dung có thể là HTML lỗi.")
+
+
 
 def generate_concat_file_by_audio_duration(input_file="data.txt",
                          frame_dir="frames",

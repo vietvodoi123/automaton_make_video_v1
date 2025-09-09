@@ -1,8 +1,9 @@
-import aiohttp
-import json
-from bs4 import BeautifulSoup
 
+import json
+
+import asyncio
 def extract_audio_url(raw_item: str) -> str:
+    print(raw_item)
     lines = raw_item.split("\n")
     if len(lines) < 2:
         return ""
@@ -57,29 +58,11 @@ def split_text(text: str, limit: int = 3000) -> list[str]:
 
     return merged_segments
 
-async def call_audio_api(segment):
-    url = "https://freetts.com/text-to-speech"
+import json
+from utils import encrypt_payload, decrypt_params, call_tts_api
 
-    headers = {
-        "accept": "text/x-component",
-        "accept-language": "vi-VN,vi;q=0.9,fr-FR;q=0.8,fr;q=0.7,en-US;q=0.6,en;q=0.5",
-        "content-type": "text/plain;charset=UTF-8",
-        "next-action": "f6a37f3b9ffdb01ba2da16f264fdabab4a254f61",
-        "next-router-state-tree": "[\"\",{\"children\":[\"functions\",{\"children\":[\"text-to-speech\",{\"children\":[\"__PAGE__\",{},\"/text-to-speech\",\"refresh\"]}]}]}]",
-        "origin": "https://freetts.com",
-        "priority": "u=1, i",
-        "referer": "https://freetts.com/text-to-speech",
-        "sec-ch-ua": "\"Not(A:Brand\";v=\"99\", \"Google Chrome\";v=\"133\", \"Chromium\";v=\"133\"",
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": "\"Windows\"",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-        "Cookie": "_ga=GA1.1.1605508501.1741007918; _ga_R18J4BQM3E=GS1.1.1742456868.5.0.1742456868.0.0.0; Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MjU0Njg1LCJ1c2VybmFtZSI6InZpZXR2b2RvaTEyMzJAZ21haWwuY29tIiwicGFzc3dvcmQiOiJBQjkwNjZFMDQwMkQwNjNGMUNDNzlGNEQ3REY4MzMzMyIsImlhdCI6MTc0MjQ1Njg2OH0.dssyfScOgELjr5XduB08lnE7WOaxPnpA-zTbik3jTAY; __gads=ID=d6442946faeba0f3:T=1741598683:RT=1742456868:S=ALNI_MYipaz-6Z1Qbzc5xhsCZVS4G-SCSw; __gpi=UID=00000ffbff0ceb6d:T=1741598683:RT=1742456868:S=ALNI_MaHLL0nBsoxr4xfa3IuEftiLlGPIw; __eoi=ID=b51a9010f4ca1855:T=1741598683:RT=1742456868:S=AA-Afja4a2TWWnn4WgO_P9kaI9Cn; FCNEC=%5B%5B%22AKsRol9cfzexBfgumw5dI4iaw4_sN1fuB6qiXeE4QCq1amz0H_pQh-Cg4UfyZc5RvNUPkPcyeH8tfOyFPWCtSLkChtnxVTA6kkg-RRe4OBh7SJofun6Vs1iHqf4tMReR-OGOs4tVKM7Et7QpLBXcWoaYl4VDpRKjog%3D%3D%22%5D%5D"
-    }
-
-    payload = [{
+async def call_audio_api(segment: str) -> str:
+    payload_object = {
         "text": segment,
         "type": 0,
         "ssml": 0,
@@ -94,19 +77,42 @@ async def call_audio_api(segment):
         "quality": 0,
         "isListenlingMode": 0,
         "displayName": "Veronica Chan"
-    }]
+    }
 
-    data = json.dumps(payload)
+    # Encrypt thành params
+    params = encrypt_payload(payload_object)
+    # print("Params:", params)
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, data=data) as response:
-                if response.status != 200:
-                    text = await response.text()
-                    print(f"⚠️ Lỗi khi gọi API: {response.status} - {text}")
-                    return None  # Trả về None thay vì raise Exception
+    COOKIE_STRING = "_ga=...; Authorization=eyJhbGc...; __gpi=..."  # ⚠️ thay bằng cookie thực tế
+    response = call_tts_api(params, COOKIE_STRING)
 
-                text_response = await response.text()
-                return extract_audio_url(text_response)  # Hàm này cần được định nghĩa để lấy URL từ phản hồi
-    except Exception as e:
-        print(f"❌ Lỗi ngoại lệ khi gọi API: {e}")
+    # print("Response:", response)
+
+    # Tách lấy dòng JSON (dòng bắt đầu bằng '1:')
+    lines = response.split("\n")
+    audio_url = ""
+    if len(lines) > 1 and lines[1].startswith("1:"):
+        try:
+            _, json_str = lines[1].split(":", 1)
+            data_obj = json.loads(json_str.strip())
+            audio_url = data_obj.get("data", {}).get("audiourl", "")
+        except Exception as e:
+            print("❌ Lỗi parse response:", e)
+
+    # # Debug: giải mã payload để chắc chắn
+    # try:
+    #     decoded = decrypt_params(params)
+    #     print("Decrypted payload:", decoded)
+    # except Exception:
+    #     pass
+    print(audio_url)
+    return audio_url
+
+
+
+# if __name__ == "__main__":
+#     asyncio.run(call_audio_api("""Xin chào các bạn khán giả! Mình là MC Tiểu Linh, chào mừng các bạn đến với kênh Vi Tiếu Hùng Audio.
+# Kênh chuyên sưu tầm và đọc những bộ truyện mới nhất về mọi thể loại, nếu bạn muốn yêu cầu truyện hãy comment xuống dưới hoặc vào bio của mình vào phần bài viết và để lại yêu cầu. truyện sẽ đươc làm nhanh nhất cho bạn.
+# Hôm nay chúng ta sẽ cùng tiếp tục theo dõi bộ truyện "Bị Cấm Thi Đại Học – Ta Tự Chế Máy Bay Tàng Hình Thế Hệ 6!", tập Chương 171 - 180.
+# Trước khi vào nội dung chính của tập ngày hôm nay, chúng ta sẽ đi nói qua nội dung chính của tập trước nhé:
+# """))
