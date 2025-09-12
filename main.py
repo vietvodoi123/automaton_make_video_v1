@@ -13,19 +13,19 @@ from dispatcher.dispatcher import dispatch_tasks
 
 # 99 - 106
 
-# for i in range(152, 156):
-#     task_id = f"t14_part{i}"
-#     text_process(task_id)
-#     asyncio.run(audio_process(task_id))
-#     create_video_with_task_id(task_id)
+for i in range(166, 171):
+    task_id = f"t14_part{i}"
+    # text_process(task_id)
+    # asyncio.run(audio_process(task_id))
+    create_video_with_task_id(task_id)
 # # dispatch_tasks()
 #
-# for i in range(91, 96):
-#     task_id = f"t18_part{i}"
-#     text_process(task_id)
-#     asyncio.run(audio_process(task_id))
-#     create_video_with_task_id(task_id)
-for i in range(40, 41):
+for i in range(102, 106):
+    task_id = f"t18_part{i}"
+    text_process(task_id)
+    asyncio.run(audio_process(task_id))
+    create_video_with_task_id(task_id)
+for i in range(46, 51):
     task_id = f"t19_part{i}"
     text_process(task_id)
     asyncio.run(audio_process(task_id))

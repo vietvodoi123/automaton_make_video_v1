@@ -107,7 +107,6 @@ def scrolling_notification_and_infor(task_dir,task_id,channel_row):
         font_color="white",
         bg_transparent=False,
         output_path=scroll_video_path,
-        font_path=r'D:\py_prj\automation_video_1\fonts\Anton-Regular.ttf'
     )
 
 
@@ -133,11 +132,11 @@ def create_video_with_task_id(task_id:str):
 
     # download and concat
     # audio download dir
-    dowload_and_concat_audio(task_dir,task_id,task_row)
+    # dowload_and_concat_audio(task_dir,task_id,task_row)
 
     # create template video
     template_path = os.path.join(task_dir, f"{task_id}_template.mp4")
-    create_template_video(story_row, task_row, channel_row, template_path)
+    # create_template_video(story_row, task_row, channel_row, template_path)
 
     # create scrolling notificaitons
     scrolling_notification_and_infor(task_dir, task_id, channel_row)

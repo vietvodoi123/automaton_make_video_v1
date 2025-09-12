@@ -12,7 +12,7 @@ def create_scrolling_text_video(
         font_color="white",
         bg_transparent=False,
         output_path="scrolling_text.mp4",
-        font_path=r'D:\py_prj\automation_video_1\fonts\Anton-Regular.ttf'
+        font="Anton"
 ):
     import math
 
@@ -45,7 +45,7 @@ def create_scrolling_text_video(
     output_path = os.path.splitext(output_path)[0] + ext
     escaped_text = text.replace(":", r'\:').replace("'", r"\\'")
     drawtext = (
-        f"drawtext=fontfile='{font_path}':"
+        f"drawtext=font='{font}':"
         f"text='{escaped_text}':"
         f"fontcolor={font_color}:fontsize={font_size}:"
         f"x=w-mod(t*{speed}\\,w+tw):y={y_position}"
